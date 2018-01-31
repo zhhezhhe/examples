@@ -134,6 +134,9 @@ def main():
             transforms.ToTensor(),
             normalize,
         ]))
+    print(train_dataset.class_to_idx)
+    print(len(train_dataset.classes))
+    print(len(train_dataset.imgs))
 
     # train_dataset = datasets.ImageFolder(
     #     traindir,

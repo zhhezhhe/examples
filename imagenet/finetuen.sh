@@ -8,4 +8,4 @@ outpath=train_log.log
 python main.py -a resnet101 \
     ../../temp/ \
     --pretrained \
-    --num_classes 57 #> ${outpath} 2>&1 &
+    --num_classes 56 #> ${outpath} 2>&1 &
