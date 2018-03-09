@@ -94,39 +94,23 @@ class ImageFolder(data.Dataset):
         imgs (list): List of (image path, class_index) tuples
     """
 
-    # def __init__(self, root, transform=None, target_transform=None,
-    #              loader=default_loader):
-    #
-    #     class_to_idx = {
-    #         'football_field': 0,
-    #         'beach': 1,
-    #         'badminton_court': 2,
-    #         'snow': 3,
-    #         'ward': 4,
-    #         'basketball_court': 5,
-    #         'golf_course': 6,
-    #         'ice_rink': 7,
-    #         'pool': 8,
-    #         'classroom': 9
-    #     }
-    #     imgs = make_dataset(root, class_to_idx)
-    #     classes = [key for key in class_to_idx]
-    #     if len(imgs) == 0:
-    #         raise(RuntimeError("Found 0 images in subfolders of: " + root + "\n"
-    #                            "Supported image extensions are: " + ",".join(IMG_EXTENSIONS)))
-    #
-    #     self.root = root
-    #     self.imgs = imgs
-    #     self.classes = classes
-    #     self.class_to_idx = class_to_idx
-    #     self.transform = transform
-    #     self.target_transform = target_transform
-    #     self.loader = loader
-
     def __init__(self, root, transform=None, target_transform=None,
                  loader=default_loader):
-        classes, class_to_idx = find_classes(root)
+
+        class_to_idx = {
+            'football_field': 0,
+            'beach': 1,
+            'badminton_court': 2,
+            'snow': 3,
+            'ward': 4,
+            'basketball_court': 5,
+            'golf_course': 6,
+            'ice_rink': 7,
+            'pool': 8,
+            'classroom': 9
+        }
         imgs = make_dataset(root, class_to_idx)
+        classes = [key for key in class_to_idx]
         if len(imgs) == 0:
             raise(RuntimeError("Found 0 images in subfolders of: " + root + "\n"
                                "Supported image extensions are: " + ",".join(IMG_EXTENSIONS)))
@@ -138,6 +122,22 @@ class ImageFolder(data.Dataset):
         self.transform = transform
         self.target_transform = target_transform
         self.loader = loader
+
+    # def __init__(self, root, transform=None, target_transform=None,
+    #              loader=default_loader):
+    #     classes, class_to_idx = find_classes(root)
+    #     imgs = make_dataset(root, class_to_idx)
+    #     if len(imgs) == 0:
+    #         raise(RuntimeError("Found 0 images in subfolders of: " + root + "\n"
+    #                            "Supported image extensions are: " + ",".join(IMG_EXTENSIONS)))
+    #
+    #     self.root = root
+    #     self.imgs = imgs
+    #     self.classes = classes
+    #     self.class_to_idx = class_to_idx
+    #     self.transform = transform
+    #     self.target_transform = target_transform
+    #     self.loader = loader
 
     def __getitem__(self, index):
         """
