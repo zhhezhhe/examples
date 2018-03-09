@@ -2,7 +2,8 @@ import argparse
 import os
 import shutil
 import time
-
+import io
+import json
 import torch
 import torch.nn as nn
 import torch.nn.parallel
@@ -24,8 +25,11 @@ model_names = sorted(name for name in models.__dict__
     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('data', metavar='DIR',
+parser.add_argument('--image_dir', default='', type=str, metavar='DIR',
                     help='path to dataset')
+
+parser.add_argument('--result_json', default='', type=str,
+                    help='path to output json')
 parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
                     choices=model_names,
                     help='model architecture: ' +
@@ -94,6 +98,28 @@ def default_loader(path):
         return pil_loader(path)
 
 
+def forward(filename, model):
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+
+    img = default_loader(filename)
+    Transforms = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        normalize,
+    ])
+    img = Transforms(img)
+    img = torch.unsqueeze(img, 0)
+    model.eval()
+    input_var = torch.autograd.Variable(img, volatile=True)
+    output = model(input_var)
+    _, pred = output.data.topk(1, 1, True, True)
+    classid = torch.squeeze(pred)
+    return classid.cpu().numpy()[0]
+
+
+
 def main():
     global args, best_prec1
     args = parser.parse_args()
@@ -128,9 +154,6 @@ def main():
         print("=> no checkpoint found at '{}'".format(args.resume))
 
     cudnn.benchmark = True
-
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
     class_to_idx = {
         'football_field': 0,
         'beach': 1,
@@ -146,21 +169,27 @@ def main():
     for key in class_to_idx:
         id_to_class[class_to_idx[key]] = key
 
-    img = default_loader(os.path.join(args.data, 'val/ice_rink/f9b23af1d5ccdd8544b873eb6a90f582c0012437.jpg'))
-    Transforms = transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            normalize,
-        ])
-    img = Transforms(img)
-    img = torch.unsqueeze(img,0)
-    model.eval()
-    input_var = torch.autograd.Variable(img, volatile=True)
-    output = model(input_var)
-    _, pred = output.data.topk(1, 1, True, True)
-    classid = torch.squeeze(pred)
-    print(id_to_class[classid.cpu().numpy()[0]])
+    result_dic = {}
+    result_dic['id_to_class'] = id_to_class
+    num = 0
+    for root, dirs, files in os.walk(args.image_dir):
+        for name in files:
+            if name.endswith('.jpg') and name not in result_dic.keys():
+                num += 1
+                filename = os.path.join(root, name)
+                classid = forward(filename, model)
+                result_dic[name] = classid
+                if num % 100 == 0:
+                    print(num)
+                    print(len(result_dic)-1)
+                    print(name)
+                    print("--"*30)
+
+    with io.open(args.result_json, 'w', encoding='utf-8') as fd:
+        fd.write(unicode(json.dumps(result_dic,
+                                    ensure_ascii=False, sort_keys=True, indent=2, separators=(',', ': '))))
+
+    print("process %d images"%(len(result_dic)-1))
 
 
 

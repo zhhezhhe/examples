@@ -2,7 +2,8 @@
 outpath=inference_log.log
 
 python inference.py -a resnet101 \
-    ../../data_cnn_transfer/ \
+    --image_dir ../../data_cnn_transfer/ \
+    --result_json image_scene_label.json\
     --epochs 500\
     --resume ./model_best.pth.tar\
     --num_classes 10\
